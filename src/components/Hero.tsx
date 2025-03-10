@@ -17,7 +17,7 @@ export const Hero: React.FC = () => {
           </div>
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl">
             <img
-              src="https://images.unsplash.com/photo-1552767059-ce182ead6c1b"
+              src="https://cestascampinas.com.br/wp-content/uploads/2022/04/cestascampinas-pascoa012-jpg.webp"
               alt="Cesta de Páscoa"
               className="object-cover w-full h-full"
             />

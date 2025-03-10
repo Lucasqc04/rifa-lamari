@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Check, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -25,20 +25,25 @@ export const RaffleGrid: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [formData, setFormData] = useState<FormData>({ name: '', whatsapp: '' });
-  const [totalRaised, setTotalRaised] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // Novos estados para confirmação e remoção
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [removeFormData, setRemoveFormData] = useState({ name: '', whatsapp: '' });
+  const [slotToRemove, setSlotToRemove] = useState<number | null>(null);
+
   useEffect(() => {
     const loadSlots = async () => {
-      const initialSlots = Array.from({ length: PIX.TOTAL_SLOTS }, (_, i) => ({
+      const initialSlots: RaffleSlot[] = Array.from({ length: PIX.TOTAL_SLOTS }, (_, i) => ({
         number: i + 1,
         taken: false,
       }));
 
       const q = query(collection(db, 'entries'));
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const updatedSlots = [...initialSlots];
+        const updatedSlots: RaffleSlot[] = [...initialSlots];
         let paidCount = 0;
 
         snapshot.docs.forEach((doc) => {
@@ -49,7 +54,7 @@ export const RaffleGrid: React.FC = () => {
           } as RaffleEntry;
 
           updatedSlots[entry.slotNumber - 1] = {
-            number: entry.slotNumber,
+            ...updatedSlots[entry.slotNumber - 1],
             taken: true,
             entry,
           };
@@ -60,7 +65,6 @@ export const RaffleGrid: React.FC = () => {
         });
 
         setSlots(updatedSlots);
-        setTotalRaised(paidCount * PIX.PRICE);
         setInitialLoading(false);
       });
 
@@ -92,30 +96,36 @@ export const RaffleGrid: React.FC = () => {
     e.preventDefault();
     if (!selectedSlot || submitting) return;
 
+    // Verifica se o número já foi reservado antes de prosseguir
+    const q = query(
+      collection(db, 'entries'),
+      where('slotNumber', '==', selectedSlot)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      toast.error('Este número já foi reservado por outra pessoa!');
+      setShowForm(false);
+      return;
+    }
+
+    // Ao invés de confirmar imediatamente, exibe o modal para confirmar os dados
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmRegistration = async () => {
     try {
       setSubmitting(true);
-      
-      const q = query(
-        collection(db, 'entries'),
-        where('slotNumber', '==', selectedSlot)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        toast.error('Este número já foi reservado por outra pessoa!');
-        setShowForm(false);
-        return;
-      }
-
       const entry: Omit<RaffleEntry, 'id'> = {
         name: formData.name,
         whatsapp: formData.whatsapp.replace(/\D/g, ''),
-        slotNumber: selectedSlot,
+        slotNumber: selectedSlot as number,
         paid: false,
         createdAt: new Date(),
       };
 
       await addDoc(collection(db, 'entries'), entry);
+      setShowConfirmModal(false);
       setShowForm(false);
       setShowPayment(true);
       toast.success('Número reservado com sucesso! Faça o pagamento para confirmar.');
@@ -132,6 +142,47 @@ export const RaffleGrid: React.FC = () => {
     toast.success('Código PIX copiado!');
   };
 
+  const handleSlotRemove = (slot: RaffleSlot) => {
+    if (slot.entry?.paid) {
+      toast.error('Este número já foi pago e não pode ser removido!');
+      return;
+    }
+    setSlotToRemove(slot.number);
+    setShowRemoveModal(true);
+    setRemoveFormData({ name: '', whatsapp: '' });
+  };
+
+  const handleRemoveSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slotToRemove || submitting) return;
+
+    const slot = slots.find((s) => s.number === slotToRemove);
+    if (!slot || !slot.entry) {
+      toast.error('Reserva não encontrada.');
+      return;
+    }
+
+    if (
+      removeFormData.name !== slot.entry.name ||
+      removeFormData.whatsapp.replace(/\D/g, '') !== slot.entry.whatsapp
+    ) {
+      toast.error('Os dados informados não correspondem aos cadastrados.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await deleteDoc(doc(db, 'entries', slot.entry.id));
+      toast.success('Reserva removida com sucesso.');
+      setShowRemoveModal(false);
+    } catch (error) {
+      console.error('Error removing entry:', error);
+      toast.error('Erro ao remover a reserva. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -145,17 +196,20 @@ export const RaffleGrid: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-primary-800 mb-2">Escolha seu número da sorte</h2>
         <p className="text-gray-600">Cada número custa apenas R$ {PIX.PRICE},00</p>
-        <p className="text-lg font-semibold text-primary-600 mt-2">
-          Total arrecadado: R$ {totalRaised.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-        </p>
       </div>
 
       <div className="grid grid-cols-5 md:grid-cols-10 gap-2 mb-8">
         {slots.map((slot) => (
           <button
             key={slot.number}
-            onClick={() => !slot.taken && handleSlotClick(slot.number)}
-            disabled={slot.taken}
+            onClick={() => {
+              if (!slot.taken) {
+                handleSlotClick(slot.number);
+              } else if (!slot.entry?.paid) {
+                handleSlotRemove(slot);
+              }
+            }}
+            disabled={slot.taken && slot.entry?.paid}
             className={clsx(
               'aspect-square rounded-lg text-sm font-medium transition-all p-1',
               'flex flex-col items-center justify-center',
@@ -229,6 +283,9 @@ export const RaffleGrid: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Os dados inseridos devem ser verdadeiros, pois entraremos em contato via WhatsApp para confirmar o envio do prêmio.
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -247,6 +304,44 @@ export const RaffleGrid: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showConfirmModal && selectedSlot && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-primary-800 mb-4">
+              Confirmar Dados para o número {selectedSlot}
+            </h3>
+            <p className="text-sm text-gray-700 mb-2">
+              Por favor, confirme se os dados abaixo estão corretos, pois entraremos em contato via WhatsApp para confirmar o envio do prêmio:
+            </p>
+            <ul className="mb-4">
+              <li>
+                <strong>Nome:</strong> {formData.name}
+              </li>
+              <li>
+                <strong>WhatsApp:</strong> {formData.whatsapp}
+              </li>
+            </ul>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRegistration}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+              >
+                {submitting ? 'Confirmando...' : 'Confirmar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -289,6 +384,64 @@ export const RaffleGrid: React.FC = () => {
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showRemoveModal && slotToRemove && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-primary-800 mb-4">
+              Remover reserva do número {slotToRemove}
+            </h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Para confirmar a remoção, por favor, insira o mesmo Nome e WhatsApp usados no cadastro.
+            </p>
+            <form onSubmit={handleRemoveSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="remove-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome completo
+                </label>
+                <input
+                  type="text"
+                  id="remove-name"
+                  required
+                  value={removeFormData.name}
+                  onChange={(e) => setRemoveFormData({ ...removeFormData, name: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="remove-whatsapp" className="block text-sm font-medium text-gray-700 mb-1">
+                  WhatsApp
+                </label>
+                <input
+                  type="tel"
+                  id="remove-whatsapp"
+                  required
+                  placeholder="(11) 99999-9999"
+                  value={removeFormData.whatsapp}
+                  onChange={(e) => setRemoveFormData({ ...removeFormData, whatsapp: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRemoveModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {submitting ? 'Removendo...' : 'Remover'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

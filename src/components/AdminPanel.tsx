@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
 const AdminPanel: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,7 +24,10 @@ const AdminPanel: React.FC = () => {
   }, [isAuthenticated]);
 
   const handleLogin = () => {
-    if (username === 'lamariadm' && password === 'senhalamari') {
+    // Utiliza as credenciais definidas no arquivo .env
+    const adminUsername = import.meta.env.VITE_USERNAME;
+    const adminPassword = import.meta.env.VITE_PASSWORD;
+    if (username === adminUsername && password === adminPassword) {
       setIsAuthenticated(true);
     } else {
       alert('Credenciais inválidas');
@@ -34,18 +37,42 @@ const AdminPanel: React.FC = () => {
   const handlePaymentStatusUpdate = async (entryId: string, isPaid: boolean) => {
     const entryDocRef = doc(db, 'entries', entryId);
     await updateDoc(entryDocRef, {
-      paid: !isPaid, // Correct field name
+      paid: !isPaid,
     });
 
     setEntries(prevEntries =>
       prevEntries.map(entry =>
-        entry.id === entryId ? { ...entry, paid: !entry.paid } : entry // Correct field name
+        entry.id === entryId ? { ...entry, paid: !entry.paid } : entry
       )
     );
   };
 
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!window.confirm("Deseja realmente excluir este registro?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'entries', entryId));
+      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
+      alert("Registro excluído com sucesso.");
+    } catch (error) {
+      console.error("Erro ao excluir registro: ", error);
+      alert("Erro ao excluir registro.");
+    }
+  };
+
+  // Pesquisa em múltiplos campos: nome, whatsapp, slotNumber e status de pagamento
   const filteredEntries = entries.filter(entry => {
-    const matchesSearchQuery = entry.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const fieldsToSearch = [
+      entry.name || '',
+      entry.whatsapp || '',
+      entry.slotNumber ? entry.slotNumber.toString() : '',
+      entry.paid ? 'sim' : 'não'
+    ];
+    const matchesSearchQuery = fieldsToSearch.some(field =>
+      field.toLowerCase().includes(searchQuery.toLowerCase())
+    );
     const matchesPaymentStatus =
       paymentStatusFilter === 'all' ||
       (paymentStatusFilter === 'paid' && entry.paid) ||
@@ -86,7 +113,7 @@ const AdminPanel: React.FC = () => {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Pesquisar por nome"
+          placeholder="Pesquisar"
           className="border rounded p-2"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -94,7 +121,9 @@ const AdminPanel: React.FC = () => {
       </div>
 
       <div className="mb-4">
-        <label htmlFor="paymentStatusFilter" className="mr-2">Filtrar por status de pagamento:</label>
+        <label htmlFor="paymentStatusFilter" className="mr-2">
+          Filtrar por status de pagamento:
+        </label>
         <select
           id="paymentStatusFilter"
           className="border rounded p-2"
@@ -112,6 +141,7 @@ const AdminPanel: React.FC = () => {
           <tr>
             <th className="px-4 py-2">Nome</th>
             <th className="px-4 py-2">WhatsApp</th>
+            <th className="px-4 py-2">Slot</th>
             <th className="px-4 py-2">Pago</th>
             <th className="px-4 py-2">Ações</th>
           </tr>
@@ -121,13 +151,20 @@ const AdminPanel: React.FC = () => {
             <tr key={entry.id}>
               <td className="border px-4 py-2">{entry.name}</td>
               <td className="border px-4 py-2">{entry.whatsapp}</td>
+              <td className="border px-4 py-2">{entry.slotNumber}</td>
               <td className="border px-4 py-2">{entry.paid ? 'Sim' : 'Não'}</td>
-              <td className="border px-4 py-2">
+              <td className="border px-4 py-2 flex gap-2">
                 <button
                   className="bg-primary-500 text-white rounded p-2"
                   onClick={() => handlePaymentStatusUpdate(entry.id, entry.paid)}
                 >
                   Alterar Status
+                </button>
+                <button
+                  className="bg-red-500 text-white rounded p-2"
+                  onClick={() => handleDeleteEntry(entry.id)}
+                >
+                  Excluir
                 </button>
               </td>
             </tr>
