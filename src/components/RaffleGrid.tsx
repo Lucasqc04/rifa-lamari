@@ -10,7 +10,7 @@ import clsx from 'clsx';
 // Configuração do PIX
 const PIX = {
   PAYLOAD: "00020126360014br.gov.bcb.pix0114+55119932889165204000053039865802BR5922Lucas Quinteiro Campos6008Brasilia62230519daqr5466872008443526304ACF0",
-  PRICE: 8,
+  PRICE: 10,
   TOTAL_SLOTS: 200,
 };
 

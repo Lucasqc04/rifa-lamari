@@ -13,12 +13,7 @@ export const Hero: React.FC = () => {
               Ajude a realizar o sonho das meninas Lara e Mariana de abrir sua própria loja de roupas!
               Cada número custa apenas R$8,00 e você concorre a uma incrível cesta de Páscoa.
             </p>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <p className="text-sm text-gray-600">Total arrecadado:</p>
-              <p className="text-3xl font-bold text-primary-600">
-                R$ {(200 * 8).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+       
           </div>
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl">
             <img
