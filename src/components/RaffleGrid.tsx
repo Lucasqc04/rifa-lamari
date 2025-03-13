@@ -9,7 +9,7 @@ import clsx from 'clsx';
 
 // Configuração do PIX
 const PIX = {
-  PAYLOAD: "00020126360014br.gov.bcb.pix0114+55119932889165204000053039865802BR5922Lucas Quinteiro Campos6008Brasilia62230519daqr5466872008443526304ACF0",
+  PAYLOAD: "00020101021126360014br.gov.bcb.pix0114+5511985077255520400005303986540510.005802BR5923LARA FERRARI DE ALMEIDA6009SAO PAULO62070503***63047A3D",
   PRICE: 10,
   TOTAL_SLOTS: 200,
 };
@@ -33,6 +33,7 @@ export const RaffleGrid: React.FC = () => {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [removeFormData, setRemoveFormData] = useState({ name: '', whatsapp: '' });
   const [slotToRemove, setSlotToRemove] = useState<number | null>(null);
+  const [showCancelPixModal, setShowCancelPixModal] = useState(false);
 
   useEffect(() => {
     const loadSlots = async () => {
@@ -148,10 +149,9 @@ export const RaffleGrid: React.FC = () => {
       return;
     }
     setSlotToRemove(slot.number);
-    setShowRemoveModal(true);
+     setShowCancelPixModal(true);
     setRemoveFormData({ name: '', whatsapp: '' });
   };
-
   const handleRemoveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!slotToRemove || submitting) return;
@@ -387,6 +387,59 @@ export const RaffleGrid: React.FC = () => {
           </div>
         </div>
       )}
+
+{showCancelPixModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-xl p-6 max-w-md w-full">
+      <h3 className="text-xl font-bold text-primary-800 mb-4">
+        Pagamento via PIX
+      </h3>
+      <div className="flex flex-col items-center space-y-4">
+        <div className="bg-primary-50 p-4 rounded-lg w-full">
+          <div className="flex items-start gap-3 text-sm text-primary-700 mb-4">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <p>
+              Mesmo que o número esteja reservado, você pode cancelar a reserva. Veja os dados do PIX abaixo:
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm flex justify-center">
+            <QRCodeSVG value={PIX.PAYLOAD} size={200} />
+          </div>
+        </div>
+        <div className="w-full p-4 bg-primary-50 rounded-lg">
+          <p className="text-center font-medium text-primary-800 mb-2">
+            Valor a pagar: <span className="text-xl">R$ {PIX.PRICE},00</span>
+          </p>
+          <button
+            onClick={copyPixCode}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200"
+          >
+            <Copy size={20} />
+            Copiar código PIX
+          </button>
+        </div>
+        {/* Botão para avançar para a tela de confirmação de cancelamento */}
+        <button
+          onClick={() => {
+            setShowCancelPixModal(false);
+            setShowRemoveModal(true);
+          }}
+          className="w-full px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700"
+        >
+          Deseja cancelar?
+        </button>
+        {/* Botão para fechar o modal sem cancelar */}
+        <button
+          onClick={() => setShowCancelPixModal(false)}
+          className="w-full px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {showRemoveModal && slotToRemove && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
