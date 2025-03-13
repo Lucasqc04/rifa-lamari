@@ -11,7 +11,7 @@ export const Hero: React.FC = () => {
             </h2>
             <p className="text-lg text-gray-600 mb-6">
               Ajude a realizar o sonho das meninas Lara e Mariana de abrir sua própria loja de roupas!
-              Cada número custa apenas R$8,00 e você concorre a uma incrível cesta de Páscoa.
+              Cada número custa apenas R$10,00 e você concorre a uma incrível cesta de Páscoa.
             </p>
        
           </div>
