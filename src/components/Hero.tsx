@@ -17,7 +17,7 @@ export const Hero: React.FC = () => {
           </div>
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-xl">
             <img
-              src="https://ibb.co/rGjJ0my8"
+              src="https://i.ibb.co/pv7pwxXV/IMG-20250313-WA0159.jpg"
               alt="Cesta de Páscoa"
               className="object-cover w-full h-full"
             />
