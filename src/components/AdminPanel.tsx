@@ -1,53 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
-import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { Timestamp } from 'firebase/firestore';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { db } from "../lib/firebase";
+import { collection, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
+import { Link, useNavigate } from "react-router-dom";
 
 const AdminPanel: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [entries, setEntries] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // Estado para controle da ordenação
+  const [searchQuery, setSearchQuery] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEntries = async () => {
-      const entriesCollection = collection(db, 'entries');
+      const entriesCollection = collection(db, "entries");
       const entriesSnapshot = await getDocs(entriesCollection);
-      const entriesList = entriesSnapshot.docs.map(doc => ({
+      const entriesList = entriesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date() // Converte Timestamp para Date
+        createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
       }));
       setEntries(entriesList);
     };
 
-    if (isAuthenticated) {
-      fetchEntries();
-    }
-  }, [isAuthenticated]);
-
-  const handleLogin = () => {
-    const adminUsername = import.meta.env.VITE_USERNAME;
-    const adminPassword = import.meta.env.VITE_PASSWORD;
-    if (username === adminUsername && password === adminPassword) {
-      setIsAuthenticated(true);
-    } else {
-      alert('Credenciais inválidas');
-    }
-  };
+    fetchEntries();
+  }, []);
 
   const handlePaymentStatusUpdate = async (entryId: string, isPaid: boolean) => {
-    const entryDocRef = doc(db, 'entries', entryId);
+    const entryDocRef = doc(db, "entries", entryId);
     await updateDoc(entryDocRef, {
       paid: !isPaid,
     });
 
-    setEntries(prevEntries =>
-      prevEntries.map(entry =>
+    setEntries((prevEntries) =>
+      prevEntries.map((entry) =>
         entry.id === entryId ? { ...entry, paid: !entry.paid } : entry
       )
     );
@@ -59,8 +45,8 @@ const AdminPanel: React.FC = () => {
     }
 
     try {
-      await deleteDoc(doc(db, 'entries', entryId));
-      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
+      await deleteDoc(doc(db, "entries", entryId));
+      setEntries((prevEntries) => prevEntries.filter((entry) => entry.id !== entryId));
       alert("Registro excluído com sucesso.");
     } catch (error) {
       console.error("Erro ao excluir registro: ", error);
@@ -68,73 +54,57 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  // Alternar entre ordenação ascendente e descendente
   const toggleSortOrder = () => {
-    setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
   };
 
-  // Filtrar e ordenar os registros
+  const handleLogout = () => {
+    // Limpar o localStorage e alterar o estado
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login"); // Redireciona para a página de login
+  };
+
   const filteredEntries = entries
-    .filter(entry => {
+    .filter((entry) => {
       const fieldsToSearch = [
-        entry.name || '',
-        entry.whatsapp || '',
-        entry.slotNumber ? entry.slotNumber.toString() : '',
-        entry.paid ? 'sim' : 'não'
+        entry.name || "",
+        entry.whatsapp || "",
+        entry.slotNumber ? entry.slotNumber.toString() : "",
+        entry.paid ? "sim" : "não",
       ];
-      const matchesSearchQuery = fieldsToSearch.some(field =>
+      const matchesSearchQuery = fieldsToSearch.some((field) =>
         field.toLowerCase().includes(searchQuery.toLowerCase())
       );
       const matchesPaymentStatus =
-        paymentStatusFilter === 'all' ||
-        (paymentStatusFilter === 'paid' && entry.paid) ||
-        (paymentStatusFilter === 'unpaid' && !entry.paid);
+        paymentStatusFilter === "all" ||
+        (paymentStatusFilter === "paid" && entry.paid) ||
+        (paymentStatusFilter === "unpaid" && !entry.paid);
 
       return matchesSearchQuery && matchesPaymentStatus;
     })
     .sort((a, b) => {
-      return sortOrder === 'asc'
+      return sortOrder === "asc"
         ? a.createdAt.getTime() - b.createdAt.getTime()
         : b.createdAt.getTime() - a.createdAt.getTime();
     });
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        
-        <h2 className="text-2xl mb-4">Painel Administrativo</h2>
-        <input
-          type="text"
-          placeholder="Username"
-          className="border rounded p-2 mb-2"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="border rounded p-2 mb-4"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button className="bg-primary-500 text-white rounded p-2" onClick={handleLogin}>
-          Login
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl items-center font-bold mb-4">Painel Administrativo</h1>
-      <div className="flex justify-center mt-8 mb-8">
-  <Link
-    to="/dashboard"
-    className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-  >
-    Dashboard
-  </Link>
-</div>
+      <h1 className="text-2xl font-bold mb-4">Painel Administrativo</h1>
+      <div className="flex justify-between items-center mt-8 mb-8">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+        >
+          Dashboard
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+        >
+          Logout
+        </button>
+      </div>
 
       <div className="mb-4 flex gap-4">
         <input
@@ -142,10 +112,10 @@ const AdminPanel: React.FC = () => {
           placeholder="Pesquisar"
           className="border rounded p-2"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
         <button className="bg-blue-500 text-white rounded p-2" onClick={toggleSortOrder}>
-          Ordenar por data ({sortOrder === 'asc' ? 'Mais antigos' : 'Mais recentes'})
+          Ordenar por data ({sortOrder === "asc" ? "Mais antigos" : "Mais recentes"})
         </button>
       </div>
 
@@ -157,7 +127,7 @@ const AdminPanel: React.FC = () => {
           id="paymentStatusFilter"
           className="border rounded p-2"
           value={paymentStatusFilter}
-          onChange={e => setPaymentStatusFilter(e.target.value)}
+          onChange={(e) => setPaymentStatusFilter(e.target.value)}
         >
           <option value="all">Todos</option>
           <option value="paid">Pagos</option>
@@ -177,14 +147,15 @@ const AdminPanel: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredEntries.map(entry => (
+          {filteredEntries.map((entry) => (
             <tr key={entry.id}>
               <td className="border px-4 py-2">{entry.name}</td>
               <td className="border px-4 py-2">{entry.whatsapp}</td>
               <td className="border px-4 py-2">{entry.slotNumber}</td>
-              <td className="border px-4 py-2">{entry.paid ? 'Sim' : 'Não'}</td>
+              <td className="border px-4 py-2">{entry.paid ? "Sim" : "Não"}</td>
               <td className="border px-4 py-2">
-                {entry.createdAt.toLocaleDateString('pt-BR')} {entry.createdAt.toLocaleTimeString('pt-BR')}
+                {entry.createdAt.toLocaleDateString("pt-BR")}{" "}
+                {entry.createdAt.toLocaleTimeString("pt-BR")}
               </td>
               <td className="border px-4 py-2 flex gap-2">
                 <button
@@ -203,11 +174,9 @@ const AdminPanel: React.FC = () => {
             </tr>
           ))}
         </tbody>
-       
       </table>
-      
     </div>
   );
 };
 
-export default AdminPanel;
+export default AdminPanel;

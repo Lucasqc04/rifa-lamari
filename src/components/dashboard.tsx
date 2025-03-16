@@ -15,6 +15,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { Link } from "react-router-dom";
 
 interface Entrada {
   id: string;
@@ -54,21 +55,21 @@ const Dashboard: React.FC = () => {
     buscarEntradas();
   }, []);
 
-  // Indicadores gerais
-  const totalEntradas = entradas.length;
-  const faturamentoTotal = totalEntradas * 10; // Cada bilhete é R$10
+  // Filtra apenas as entradas pagas para os indicadores iniciais
+  const entradasPagasOnly = entradas.filter((e) => e.paid);
 
-  // Média de bilhetes por comprador (agrupando por número de WhatsApp)
-  const compradoresUnicos = new Set(entradas.map((e) => e.whatsapp)).size;
+  // Indicadores gerais (apenas para entradas pagas)
+  const totalEntradasPagas = entradasPagasOnly.length;
+  const faturamentoTotal = totalEntradasPagas * 10; // Cada bilhete é R$10
+
+  // Média de bilhetes por comprador (agrupando por número de WhatsApp, somente para pagas)
+  const compradoresUnicosPagos = new Set(entradasPagasOnly.map((e) => e.whatsapp)).size;
   const mediaBilhetesComprador =
-    compradoresUnicos > 0 ? (totalEntradas / compradoresUnicos).toFixed(2) : "0";
+    compradoresUnicosPagos > 0 ? (totalEntradasPagas / compradoresUnicosPagos).toFixed(2) : "0";
 
-  // Projeção de faturamento
+  // Projeção de faturamento (apenas para pagas)
   const faturamentoProjetado = 200 * 10; // 200 bilhetes totais
-  const progressoFaturamento = (
-    (faturamentoTotal / faturamentoProjetado) *
-    100
-  ).toFixed(2);
+  const progressoFaturamento = ((faturamentoTotal / faturamentoProjetado) * 100).toFixed(2);
 
   // Vendas por Dia – agrupa por data (em R$)
   const mapaVendasDiarias = entradas.reduce((acc, entrada) => {
@@ -119,15 +120,15 @@ const Dashboard: React.FC = () => {
     quantidade: mapaDiasSemana[dia] || 0,
   }));
 
-  // Distribuição de Pagamentos
+  // Distribuição de Pagamentos (utilizando todas as entradas)
   // "Em Branco": números não escolhidos; "Aguardando Pagamento": escolhidos mas não pagos; "Pago": pagos.
-  const entradasPagas = entradas.filter((e) => e.paid).length;
-  const entradasNaoPagas = totalEntradas - entradasPagas;
-  const entradasEmBranco = 200 - totalEntradas;
+  const countEntradasPagas = entradas.filter((e) => e.paid).length;
+  const entradasNaoPagas = entradas.length - countEntradasPagas;
+  const entradasEmBranco = 200 - entradas.length;
   const dadosDistribuicaoPagamentos = [
     { nome: "Em Branco", valor: entradasEmBranco },
     { nome: "Aguardando Pagamento", valor: entradasNaoPagas },
-    { nome: "Pago", valor: entradasPagas },
+    { nome: "Pago", valor: countEntradasPagas },
   ];
   const coresPizza = ["#FCE4EC", "#F48FB1", "#E91E63"]; // Tons de rosa
 
@@ -148,7 +149,7 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  // Ranking de Compradores agrupando pelo número de WhatsApp
+  // Ranking de Compradores agrupando pelo número de WhatsApp (considera todas as entradas)
   const compradorMap = entradas.reduce((acc, entrada) => {
     const numero = entrada.whatsapp;
     if (!acc[numero]) {
@@ -170,21 +171,21 @@ const Dashboard: React.FC = () => {
 
       {/* Indicadores */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* Faturamento Total */}
+        {/* Faturamento Total (apenas pagas) */}
         <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center">
           <h2 className="text-lg font-semibold">Faturamento Total</h2>
           <p className="text-3xl font-bold">
             R$ {faturamentoTotal.toLocaleString()}
           </p>
         </div>
-        {/* Média de Bilhetes por Comprador */}
+        {/* Média de Bilhetes por Comprador (apenas pagas) */}
         <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center">
           <h2 className="text-lg font-semibold">
             Média de Bilhetes/Comprador
           </h2>
           <p className="text-3xl font-bold">{mediaBilhetesComprador}</p>
         </div>
-        {/* Projeção de Faturamento com destaque */}
+        {/* Projeção de Faturamento (apenas pagas) */}
         <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center border-4 border-yellow-500">
           <h2 className="text-lg font-semibold">Projeção de Faturamento</h2>
           <p className="text-3xl font-bold">
@@ -196,7 +197,7 @@ const Dashboard: React.FC = () => {
               className="h-2 rounded-full"
               style={{
                 width: `${progressoFaturamento}%`,
-                backgroundColor: "#C2185B", // cor destacada para a barra
+                backgroundColor: "#C2185B",
               }}
             />
           </div>
@@ -318,7 +319,13 @@ const Dashboard: React.FC = () => {
           ))}
         </ul>
       </div>
-    </div>
+      <Link
+  to="/painel"
+  className="fixed top-4 left-4 bg-transparent text-pink border-2 border-black py-2 px-4 rounded-full shadow-md hover:bg-pink-600"
+>
+   Painel
+</Link>    </div>
+    
   );
 };
 
