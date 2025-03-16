@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { db } from '../lib/firebase';
 import type { RaffleEntry, RaffleSlot } from '../types';
 import clsx from 'clsx';
+import FloatingWhatsappButton from './FloatingWhatsappButton';
 
 // Configuração do PIX
 const PIX = {
@@ -498,6 +499,7 @@ export const RaffleGrid: React.FC = () => {
           </div>
         </div>
       )}
+       <FloatingWhatsappButton />
     </div>
   );
 };
