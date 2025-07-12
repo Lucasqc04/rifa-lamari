@@ -15,9 +15,9 @@ import RemoveReservationModal from './RemoveReservationModal';
 import FloatingWhatsappButton from './FloatingWhatsappButton';
 
 const PIX = {
-  PAYLOAD: "00020101021126360014br.gov.bcb.pix0114+5511985077255520400005303986540510.005802BR5923LARA FERRARI DE ALMEIDA6009SAO PAULO62070503***63047A3D",
-  PRICE: 10,
-  TOTAL_SLOTS: 200,
+  PAYLOAD: "00020126410014BR.GOV.BCB.PIX0119visadoces@gmail.com520400005303986540515.005802BR5901N6001C62070503***63043F15",
+  PRICE: 15,
+  TOTAL_SLOTS: 100,
 };
 
 interface FormData {
@@ -205,13 +205,13 @@ const RaffleGrid: React.FC = () => {
             }}
             disabled={slot.taken && slot.entry?.paid}
             className={clsx(
-              'aspect-square rounded-lg text-sm font-medium transition-all p-1',
+              'aspect-square rounded-full text-sm font-medium transition-all p-1',
               'flex flex-col items-center justify-center',
               slot.taken
                 ? slot.entry?.paid
                   ? 'bg-green-100 text-green-800'
                   : 'bg-yellow-100 text-yellow-800'
-                : 'bg-white border border-primary-200'
+                : 'bg-[#905010] text-white'
             )}
             whileHover={{ scale: 1.05, boxShadow: '0px 5px 15px rgba(0,0,0,0.2)' }}
             whileTap={{ scale: 0.95 }}

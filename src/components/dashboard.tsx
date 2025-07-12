@@ -165,28 +165,28 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-white">
-      <h1 className="text-2xl font-bold text-center text-pink-500 mb-4">
+      <h1 className="text-2xl font-bold text-center text-primary-500 mb-4">
         Painel de Controle
       </h1>
 
       {/* Indicadores */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Faturamento Total (apenas pagas) */}
-        <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center">
+        <div className="bg-primary-500 text-white p-4 rounded-lg shadow-md text-center">
           <h2 className="text-lg font-semibold">Faturamento Total</h2>
           <p className="text-3xl font-bold">
             R$ {faturamentoTotal.toLocaleString()}
           </p>
         </div>
         {/* Média de Bilhetes por Comprador (apenas pagas) */}
-        <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center">
+        <div className="bg-primary-500 text-white p-4 rounded-lg shadow-md text-center">
           <h2 className="text-lg font-semibold">
             Média de Bilhetes/Comprador
           </h2>
           <p className="text-3xl font-bold">{mediaBilhetesComprador}</p>
         </div>
         {/* Projeção de Faturamento (apenas pagas) */}
-        <div className="bg-pink-500 text-white p-4 rounded-lg shadow-md text-center border-4 border-yellow-500">
+        <div className="bg-primary-500 text-white p-4 rounded-lg shadow-md text-center border-4 border-primary-300">
           <h2 className="text-lg font-semibold">Projeção de Faturamento</h2>
           <p className="text-3xl font-bold">
             R$ {faturamentoProjetado.toLocaleString()}
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
               className="h-2 rounded-full"
               style={{
                 width: `${progressoFaturamento}%`,
-                backgroundColor: "#C2185B",
+                backgroundColor: "#774619",
               }}
             />
           </div>
@@ -206,7 +206,7 @@ const Dashboard: React.FC = () => {
 
       {/* Vendas por Dia */}
       <div className="bg-white p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-pink-500 mb-2">
+        <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Vendas por Dia
         </h2>
         <ResponsiveContainer width="100%" height={200}>
@@ -214,14 +214,14 @@ const Dashboard: React.FC = () => {
             <XAxis dataKey="data" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="vendas" stroke="#E91E63" />
+            <Line type="monotone" dataKey="vendas" stroke="#774619" />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Histórico de Arrecadação Acumulada */}
       <div className="bg-white p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-pink-500 mb-2">
+        <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Histórico de Arrecadação Acumulada
         </h2>
         <ResponsiveContainer width="100%" height={200}>
@@ -232,7 +232,7 @@ const Dashboard: React.FC = () => {
             <Line
               type="monotone"
               dataKey="arrecadacaoAcumulada"
-              stroke="#E91E63"
+              stroke="#774619"
             />
           </LineChart>
         </ResponsiveContainer>
@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
 
       {/* Comparação entre Dias da Semana */}
       <div className="bg-white p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-pink-500 mb-2">
+        <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Comparação entre Dias da Semana
         </h2>
         <ResponsiveContainer width="100%" height={200}>
@@ -249,14 +249,14 @@ const Dashboard: React.FC = () => {
             <XAxis dataKey="dia" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="quantidade" fill="#E91E63" />
+            <Bar dataKey="quantidade" fill="#774619" />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Distribuição de Pagamentos */}
       <div className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center">
-        <h2 className="text-lg font-semibold text-pink-500 mb-2">
+        <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Distribuição de Pagamentos
         </h2>
         <ResponsiveContainer width={250} height={250}>
@@ -283,21 +283,21 @@ const Dashboard: React.FC = () => {
         <div className="mt-4">
           <div className="flex items-center mb-1">
             <div
-              style={{ backgroundColor: "#FCE4EC" }}
+              style={{ backgroundColor: "#eae0cf" }}
               className="w-4 h-4 mr-2 rounded-full"
             ></div>
             <span>Em Branco</span>
           </div>
           <div className="flex items-center mb-1">
             <div
-              style={{ backgroundColor: "#F48FB1" }}
+              style={{ backgroundColor: "#d9c5a4" }}
               className="w-4 h-4 mr-2 rounded-full"
             ></div>
             <span>Aguardando Pagamento</span>
           </div>
           <div className="flex items-center">
             <div
-              style={{ backgroundColor: "#E91E63" }}
+              style={{ backgroundColor: "#774619" }}
               className="w-4 h-4 mr-2 rounded-full"
             ></div>
             <span>Pago</span>
@@ -307,7 +307,7 @@ const Dashboard: React.FC = () => {
 
       {/* Ranking de Compradores */}
       <div className="bg-white p-4 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold text-pink-500 mb-2">
+        <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Top Compradores
         </h2>
         <ul className="space-y-2">

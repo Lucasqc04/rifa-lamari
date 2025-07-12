@@ -8,7 +8,7 @@ import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AdminAuthProvider } from "./components/AdminAuthContext";
 import RaffleGrid from "./components/RaffleGrid";
-import NotificationPermission from "./components/NotificationPermission"; // Importa aqui
+//import NotificationPermission from "./components/NotificationPermission"; // Importa aqui
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Toaster position="top-right" />
-          <NotificationPermission /> {/* Solicita permissão e configura notificações */}
+
           <Header />
           <Routes>
             <Route path="/" element={<><Hero /><RaffleGrid /></>} />

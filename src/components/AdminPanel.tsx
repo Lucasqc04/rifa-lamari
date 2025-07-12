@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../lib/firebase";
-import { collection, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -9,13 +9,14 @@ const AdminPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEntries = async () => {
       const entriesCollection = collection(db, "entries");
       const entriesSnapshot = await getDocs(entriesCollection);
-      const entriesList = entriesSnapshot.docs.map((doc) => ({
+      const entriesList = entriesSnapshot.docs.map((doc: QueryDocumentSnapshot) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
@@ -24,6 +25,13 @@ const AdminPanel: React.FC = () => {
     };
 
     fetchEntries();
+
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handlePaymentStatusUpdate = async (entryId: string, isPaid: boolean) => {
@@ -59,9 +67,8 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Limpar o localStorage e alterar o estado
     localStorage.removeItem("isAuthenticated");
-    navigate("/login"); // Redireciona para a página de login
+    navigate("/login");
   };
 
   const filteredEntries = entries
@@ -135,29 +142,19 @@ const AdminPanel: React.FC = () => {
         </select>
       </div>
 
-      <table className="table-auto w-full">
-        <thead>
-          <tr>
-            <th className="px-4 py-2">Nome</th>
-            <th className="px-4 py-2">WhatsApp</th>
-            <th className="px-4 py-2">Slot</th>
-            <th className="px-4 py-2">Pago</th>
-            <th className="px-4 py-2">Data de Criação</th>
-            <th className="px-4 py-2">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
+      {isMobileView ? (
+        <div className="grid grid-cols-1 gap-4">
           {filteredEntries.map((entry) => (
-            <tr key={entry.id}>
-              <td className="border px-4 py-2">{entry.name}</td>
-              <td className="border px-4 py-2">{entry.whatsapp}</td>
-              <td className="border px-4 py-2">{entry.slotNumber}</td>
-              <td className="border px-4 py-2">{entry.paid ? "Sim" : "Não"}</td>
-              <td className="border px-4 py-2">
-                {entry.createdAt.toLocaleDateString("pt-BR")}{" "}
-                {entry.createdAt.toLocaleTimeString("pt-BR")}
-              </td>
-              <td className="border px-4 py-2 flex gap-2">
+            <div
+              key={entry.id}
+              className="border rounded-lg p-4 shadow-md bg-white flex flex-col gap-2"
+            >
+              <p><strong>Nome:</strong> {entry.name}</p>
+              <p><strong>WhatsApp:</strong> {entry.whatsapp}</p>
+              <p><strong>Slot:</strong> {entry.slotNumber}</p>
+              <p><strong>Pago:</strong> {entry.paid ? "Sim" : "Não"}</p>
+              <p><strong>Data de Criação:</strong> {entry.createdAt.toLocaleDateString("pt-BR")} {entry.createdAt.toLocaleTimeString("pt-BR")}</p>
+              <div className="flex gap-2">
                 <button
                   className="bg-primary-500 text-white rounded p-2"
                   onClick={() => handlePaymentStatusUpdate(entry.id, entry.paid)}
@@ -170,11 +167,51 @@ const AdminPanel: React.FC = () => {
                 >
                   Excluir
                 </button>
-              </td>
-            </tr>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ) : (
+        <table className="table-auto w-full border-collapse border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 border">Nome</th>
+              <th className="px-4 py-2 border">WhatsApp</th>
+              <th className="px-4 py-2 border">Slot</th>
+              <th className="px-4 py-2 border">Pago</th>
+              <th className="px-4 py-2 border">Data de Criação</th>
+              <th className="px-4 py-2 border">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEntries.map((entry) => (
+              <tr key={entry.id} className="hover:bg-gray-50">
+                <td className="border px-4 py-2">{entry.name}</td>
+                <td className="border px-4 py-2">{entry.whatsapp}</td>
+                <td className="border px-4 py-2">{entry.slotNumber}</td>
+                <td className="border px-4 py-2">{entry.paid ? "Sim" : "Não"}</td>
+                <td className="border px-4 py-2">
+                  {entry.createdAt.toLocaleDateString("pt-BR")} {entry.createdAt.toLocaleTimeString("pt-BR")}
+                </td>
+                <td className="border px-4 py-2 flex gap-2">
+                  <button
+                    className="bg-primary-500 text-white rounded p-2"
+                    onClick={() => handlePaymentStatusUpdate(entry.id, entry.paid)}
+                  >
+                    Alterar Status
+                  </button>
+                  <button
+                    className="bg-red-500 text-white rounded p-2"
+                    onClick={() => handleDeleteEntry(entry.id)}
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
