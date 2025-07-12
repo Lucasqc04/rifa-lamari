@@ -3,6 +3,7 @@ import { db } from "../lib/firebase";
 import { collection, getDocs, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
+import RaffleModal from "./RaffleModal";
 
 const AdminPanel: React.FC = () => {
   const [entries, setEntries] = useState<any[]>([]);
@@ -10,6 +11,7 @@ const AdminPanel: React.FC = () => {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+  const [showRaffleModal, setShowRaffleModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,6 +73,10 @@ const AdminPanel: React.FC = () => {
     navigate("/login");
   };
 
+  const handleStartRaffle = () => {
+    setShowRaffleModal(true);
+  };
+
   const filteredEntries = entries
     .filter((entry) => {
       const fieldsToSearch = [
@@ -94,6 +100,10 @@ const AdminPanel: React.FC = () => {
         ? a.createdAt.getTime() - b.createdAt.getTime()
         : b.createdAt.getTime() - a.createdAt.getTime();
     });
+
+  const paidParticipants = entries
+    .filter((entry) => entry.paid)
+    .map((entry) => ({ name: entry.name, slotNumber: entry.slotNumber }));
 
   return (
     <div className="container mx-auto p-4">
@@ -141,6 +151,22 @@ const AdminPanel: React.FC = () => {
           <option value="unpaid">Não Pagos</option>
         </select>
       </div>
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleStartRaffle}
+          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+        >
+          Sortear
+        </button>
+      </div>
+
+      {showRaffleModal && (
+        <RaffleModal
+          participants={paidParticipants}
+          onClose={() => setShowRaffleModal(false)}
+        />
+      )}
 
       {isMobileView ? (
         <div className="grid grid-cols-1 gap-4">
