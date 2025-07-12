@@ -4,7 +4,7 @@ import { FaWhatsapp } from "react-icons/fa";
 const FloatingWhatsappButton: React.FC = () => {
   const handleClick = () => {
     // Altere o número e a mensagem conforme necessário
-    window.open('https://wa.me/5511985077255?text=Olá,%20preciso%20de%20ajuda!', '_blank');
+    window.open('https://wa.me/5511986929495?text=Olá,%20preciso%20de%20ajuda!', '_blank');
   };
 
   return (
