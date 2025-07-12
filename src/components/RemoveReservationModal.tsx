@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface RemoveReservationModalProps {
@@ -18,10 +18,7 @@ const RemoveReservationModal: React.FC<RemoveReservationModalProps> = ({
   onSubmit,
   submitting,
 }) => {
-  const modalRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    modalRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onCancel();
     };
@@ -38,11 +35,9 @@ const RemoveReservationModal: React.FC<RemoveReservationModalProps> = ({
         exit={{ opacity: 0 }}
       >
         <motion.div
-          ref={modalRef}
           className="bg-white rounded-xl p-6 max-w-md w-full"
           role="dialog"
           aria-modal="true"
-          tabIndex={-1}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 50, opacity: 0 }}
