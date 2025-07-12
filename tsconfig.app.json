@@ -20,5 +20,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "vite-env.d.ts", "src/firebase-messaging-sw.js"]
+  "include": ["src", "vite-env.d.ts"]
 }
