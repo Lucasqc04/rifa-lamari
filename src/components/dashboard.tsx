@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
 
   // Indicadores gerais (apenas para entradas pagas)
   const totalEntradasPagas = entradasPagasOnly.length;
-  const faturamentoTotal = totalEntradasPagas * 10; // Cada bilhete é R$10
+  const faturamentoTotal = totalEntradasPagas * 15; // Cada bilhete é R$15
 
   // Média de bilhetes por comprador (agrupando por número de WhatsApp, somente para pagas)
   const compradoresUnicosPagos = new Set(entradasPagasOnly.map((e) => e.whatsapp)).size;
@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
     compradoresUnicosPagos > 0 ? (totalEntradasPagas / compradoresUnicosPagos).toFixed(2) : "0";
 
   // Projeção de faturamento (apenas para pagas)
-  const faturamentoProjetado = 200 * 10; // 200 bilhetes totais
+  const faturamentoProjetado = 100 * 15; // 100 bilhetes totais
   const progressoFaturamento = ((faturamentoTotal / faturamentoProjetado) * 100).toFixed(2);
 
   // Vendas por Dia – agrupa por data (em R$)
@@ -84,7 +84,7 @@ const Dashboard: React.FC = () => {
       const [dia, mes, ano] = data.split("/");
       return {
         data,
-        vendas: mapaVendasDiarias[data] * 10,
+        vendas: mapaVendasDiarias[data] * 15,
         quantidade: mapaVendasDiarias[data],
         timestamp: new Date(+ano, +mes - 1, +dia).getTime(),
       };
@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
   // "Em Branco": números não escolhidos; "Aguardando Pagamento": escolhidos mas não pagos; "Pago": pagos.
   const countEntradasPagas = entradas.filter((e) => e.paid).length;
   const entradasNaoPagas = entradas.length - countEntradasPagas;
-  const entradasEmBranco = 200 - entradas.length;
+  const entradasEmBranco = 100 - entradas.length; // Atualizado para 100 bilhetes totais
   const dadosDistribuicaoPagamentos = [
     { nome: "Em Branco", valor: entradasEmBranco },
     { nome: "Aguardando Pagamento", valor: entradasNaoPagas },
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
         <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Vendas por Dia
         </h2>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={100}>
           <LineChart data={dadosVendasDiarias}>
             <XAxis dataKey="data" />
             <YAxis />
@@ -224,7 +224,7 @@ const Dashboard: React.FC = () => {
         <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Histórico de Arrecadação Acumulada
         </h2>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={100}>
           <LineChart data={dadosArrecadacaoAcumulada}>
             <XAxis dataKey="data" />
             <YAxis />
@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
         <h2 className="text-lg font-semibold text-primary-500 mb-2">
           Comparação entre Dias da Semana
         </h2>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={100}>
           <BarChart data={dadosDiasSemana}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="dia" />
